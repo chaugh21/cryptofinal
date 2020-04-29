@@ -1,5 +1,6 @@
 import os
 import shutil
+from Crypto.Hash import HMAC, SHA256
 
 
 '''
@@ -25,11 +26,11 @@ if (label == b'mac'):
     print("mac_key:", mac_key.hex())
 '''
 
-#what is server dir?? S?
+#server is address A
 class Server:
     def __init__(self):
-        self.current_client = "A"
-        self.current_client_dir = "./NETWORK/" + current_client + "/IN"
+        self.current_client = "B"
+        self.current_client_dir = "./NETWORK/" + current_client + "/DATA"
         self.pwds = {}
 
     def upload_file(self, filepath):
