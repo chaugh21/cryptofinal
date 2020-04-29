@@ -96,6 +96,7 @@ for addr in ADDR_SPACE:
 		os.mkdir(addr_dir)
 		os.mkdir(addr_dir + '/IN')
 		os.mkdir(addr_dir + '/OUT')
+		os.mkdir(addr_dir + '/DATA')
 		print('Done.')
 
 # if program was called with --clean, perform clean-up here
