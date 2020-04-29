@@ -1,11 +1,11 @@
 import os
 import shutil
 
-#what is server dir?? S?
+#server is address A
 class Server:
     def __init__(self):
-        self.current_client = "A"
-        self.current_client_dir = "./NETWORK/" + current_client + "/IN"
+        self.current_client = "B"
+        self.current_client_dir = "./NETWORK/" + current_client + "/DATA"
         self.pwds = {}
     
     def upload_file(self, filepath):
