@@ -29,7 +29,7 @@ class User:
 
     def login(self):
         #read in the userid and password from the command line
-        print('Welcome to the Secure FTP. Please enter your username').
+        print('Welcome to the Secure FTP. Please enter your username')
         userid=str(input())
         #TODO: SELECT THE CORRECT UIDPATH HERE
         print('enter your password')
