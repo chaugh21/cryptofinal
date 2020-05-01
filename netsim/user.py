@@ -6,7 +6,7 @@ from Crypto.Random import get_random_bytes
 class User:
 
     NET_PATH = './'
-    OWN_ADDR = 'A'
+    OWN_ADDR = 'B'
 
 
     def __init__(self):
@@ -41,11 +41,11 @@ class User:
         # init the netinterface
         netif = network_interface(NET_PATH,OWN_ADDR)
         #send M1
-        netif.send_msg('B', enc_msg.encode('utf-8'))
+        netif.send_msg('A', enc_msg.encode('utf-8'))
         status, enc_msg2 = netif.receive_msg(blocking=True)
         if(status):
             pt_msg2= 'TODO: PKE' (enc_msg2, usr_priv_key)
-            print('User: Message Recieved From Server:' + str(pt_msg2))
+            print('User: Message Received From Server:' + str(pt_msg2))
         else:
             #TOOD: RAISE ERROR
             #exit
