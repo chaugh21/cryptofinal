@@ -3,11 +3,16 @@
 
 import os, sys, getopt, time
 from netinterface import network_interface
+from decrypt import decrypt
 
 NET_PATH = './'
 OWN_ADDR = 'B'
 
-# ------------       
+# test session keys
+session_msg_key = b'abcdefghijklmnopqrstuvwxyz1234567890'
+session_mac_key = b'zyxwvutsrqponmlkjihgfedcba0987654321'
+
+# ------------
 # main program
 # ------------
 
@@ -40,14 +45,30 @@ if OWN_ADDR not in network_interface.addr_space:
 
 # main loop
 netif = network_interface(NET_PATH, OWN_ADDR)
+decryptionEngine = decrypt(session_msg_key, session_mac_key)
 print('Main loop started...')
 while True:
-# Calling receive_msg() in non-blocking mode ... 
-#	status, msg = netif.receive_msg(blocking=False)    
+# Calling receive_msg() in non-blocking mode ...
+#	status, msg = netif.receive_msg(blocking=False)
 #	if status: print(msg)      # if status is True, then a message was returned in msg
 #	else: time.sleep(2)        # otherwise msg is empty
 
 # Calling receive_msg() in blocking mode ...
-	status, msg = netif.receive_msg(blocking=True)      # when returns, status is True and msg contains a message 
-	print(msg.decode('utf-8'))
-    
+	status, msg = netif.receive_msg(blocking=True)      # when returns, status is True and msg contains a message
+
+	label, msg = msg[:3], msg[3:]
+
+	if (label == b'msg'):
+		decryptionEngine.generate_derived_msg_key(msg)
+		print("encrypt_key received...")
+
+	elif (label == b'mac'):
+		decryptionEngine.generate_derived_mac_key(msg)
+		print("mac_key received...")
+
+	elif (label == b'enc'):
+		if decryptionEngine.has_keys():
+			print("decrypting message...\n")
+			print(decryptionEngine.decrypt_msg(msg))
+		else:
+			print("you ain't got no keys bruh")
