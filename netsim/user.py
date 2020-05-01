@@ -48,8 +48,12 @@ class User:
             print('User: Message Recieved From Server:' + str(pt_msg2))
         else:
             #TOOD: RAISE ERROR
-            #exit
+            #exist
             pass
+
+        if not(nonced_signed_msg2[0:16]==Self.N):
+            #Raise ERROR
+        print('Login Success') #TODO: Make better error
 
     '''
     This function is used to generate the derived message and mac keys for

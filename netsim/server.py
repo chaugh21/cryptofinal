@@ -88,3 +88,36 @@ class Server:
     '''
     def generate_derived_key(self, key, nonce):
         return HMAC.new(key, msg=nonce, digestmod=SHA256).digest()
+
+
+    def handle_login_attempt(msg):
+        dec_msg_str = #Todo: PKE decrypt with (msg, self.server_private_key)
+        self.N=int(dec_msg_str[0:256])
+
+        dh1 = SessionKeyGenerator.generate_dh1()
+        X1 = DH1.pop()
+        X2 = DH1.pop()
+        P1=dh1[0]
+        P2=dh1[1]
+
+        signed_dh1 = # TODO: Digital Signatures
+
+        msg2_pt = str(N) + str(signed_dh1)
+
+        msg2_enc = #TODO: Public Key Encryption (msg2_pt,self.current_client_public_key)
+
+        netif = network_interface(NET_PATH,OWN_ADDR) #send the message
+        netif.send_msg('B', msg2_enc.encode('utf-8'))
+
+        status, msg3_signed = netif.receive_msg(blocking=True)
+
+        if not(msg3_signed[0:256] == self.N):
+            #TODO: Raise Error, exit method
+
+        DH2_signed=msg3_signed[256:]
+        DH2_unsigned = ## TODO: unsign(DH2_signed), handle errors
+
+        #TODO: BREAK MESSAGE INTO M1,M2
+
+        # set keys.
+        Self.current_session_key_msg,Self.current_session_key_mac = SessionKeyGenerator.calculate_keys(M1,M2,X1,X2,P1,P2)
