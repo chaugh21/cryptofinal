@@ -34,7 +34,8 @@ class Server:
 
     def upload_file(self, file):
         if not os.path.exists(self.current_client_dir + file):
-        
+            pass
+
 
     def download_file(self, filename):
         path = self.current_client_dir + filename
@@ -45,7 +46,7 @@ class Server:
             msg_str = f.read()
             msg_bytes = msg_str.encode('ascii')
 
-        
+
 
     def parse_command(self, plaincomm):
         args = plaincomm.split()
@@ -76,7 +77,7 @@ class Server:
             msgstr = "\t".join(lst)
             msg_bytes = msgstr.encode('ascii')
             #SEND MESSAGE TODO
-        elif cmd == "UPL":  
+        elif cmd == "UPL":
             self.upload_file(args[1])   #TODO?? i am confused on how to do this
         elif cmd == "DNL":  #download file
             self.download_file(args[1])
