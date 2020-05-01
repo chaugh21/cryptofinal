@@ -5,7 +5,7 @@ from Crypto.Random import get_random_bytes
 
 class User:
 
-    NET_PATH = './'
+    NET_PATH = './'         #should this be ./NETWORK ?????
     OWN_ADDR = 'B'
 
 
