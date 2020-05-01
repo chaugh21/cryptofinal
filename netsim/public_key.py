@@ -55,10 +55,3 @@ class public_key:
         except (ValueError, TypeError):
             print "The signature is not valid."
             return False
-
-
-
-
-    def unsign(self,message,public_keypath):
-
-    def read_key(key_path):
