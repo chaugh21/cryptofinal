@@ -14,6 +14,7 @@ class encrypt:
 
     def secure_payload(self, msg_key, mac_key, msg):
         msg = msg.encode('utf-8')
+        self.sqn_number += 1
         payload_length = len(msg)
         padding_length = AES.block_size - payload_length%AES.block_size
         mac_length = 32  # SHA256 hash value is 32 bytes long
@@ -22,7 +23,7 @@ class encrypt:
         header_version = b'\x01\x01'                            # protocol version 1.1
         header_type = b'\x01'                                   # message type 1
         header_length = msg_length.to_bytes(2, byteorder='big') # message length (encoded on 2 bytes)
-        header_sqn = (self.sqn_number + 1).to_bytes(4, byteorder='big')  # next message sequence number (encoded on 4 bytes)
+        header_sqn = self.sqn_number.to_bytes(4, byteorder='big')  # next message sequence number (encoded on 4 bytes)
         header = header_version + header_type + header_length + header_sqn
 
         # pad the payload and encrypt the padded payload with AES in CBC mode using a random iv
