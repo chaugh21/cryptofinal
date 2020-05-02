@@ -3,6 +3,7 @@ from Crypto.Random import random
 
 class SessionKeyGenerator:
 
+    #TODO: GENERATE LARGER PRIMES
 
     #Produces DH1 = [g1X1mod(p1), g2x2mod(p2) , g1,g2,p1,p2]). See Design Document for details on each element
     def generate_dh1():
