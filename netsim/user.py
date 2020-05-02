@@ -15,6 +15,9 @@ class User:
         self.X2=0
         self.server_public_key= ''
         self.usr_private_key=''
+        self.userid = ''
+        self.session_msg_key=0
+        self.session_mac_key=0
         return
 
 
@@ -22,34 +25,60 @@ class User:
         #create a random nonce N
         self.N = SessionKeyGenerator.genNonce()
         #concat
-        msg1_pt = str(uid) + str(pwd)+str(N)
+        msg1_pt = str(uid.to_bytes(8,byteorder='big')) + str(pwd.to_bytes(8,byteorder='big'))+str(self.N.to_bytes(4,byteorder='big'))
         #enc using the public key of the server. TODO: encode with public key.
-        msg1_enc = 'TODO:PKE'(msg1pt)
+        msg1_enc = PublicKey.encrypt(self.server_public_key,msg1_pt)
         return msg1_enc
 
-    def login(self):
+    def login():
         #read in the userid and password from the command line
         print('Welcome to the Secure FTP. Please enter your username')
-        userid=str(input())
-        #TODO: SELECT THE CORRECT UIDPATH HERE
+        self.userid=str(input())
         print('enter your password')
         pwd_str=str(input())
 
         #create a message to init the protocol
-        enc_msg1 = gen_message1(userid,pwd_str)
+        enc_msg1 = gen_message1(self.userid,pwd_str)
 
         # init the netinterface
         netif = network_interface(NET_PATH,OWN_ADDR)
         #send M1
         netif.send_msg('A', enc_msg.encode('utf-8'))
-        status, enc_msg2 = netif.receive_msg(blocking=True)
-        if(status):
-            pt_msg2= 'TODO: PKE' (enc_msg2, usr_priv_key)
-            print('User: Message Received From Server:' + str(pt_msg2))
-        else:
-            #TOOD: RAISE ERROR
-            #exit
-            pass
+
+        #Wait for M2
+        while (status == None):
+            status, enc_msg2 = netif.receive_msg(blocking=True)
+
+        #TODO: HANDLE ERRORS
+        pt_msg2= publickey.decrypt(self.client_pk_path,enc_msg2)
+        print('User: Message Received From Server:' + str(pt_msg2))
+        if not (int.from_bytes(pt_msg2[0:3],byteorder='big')==Self.N):
+            #Raise an error here that N is not correct
+
+        signature = pt_msg2[388:]
+        #verify the signature
+        if not (public_key.verify(self.server_pb_path,signature)):
+            #Raise and error here that the message signature did not verify
+
+        M1 = int.from_bytes(pt_msg2[4:67],byteorder='big')
+        M2 = int.from_bytes(pt_msg2[68:131],byteorder='big')
+        G1 = int.from_bytes(pt_msg2[132:195],byteorder='big')
+        G2 = int.from_bytes(pt_msg2[196:259],byteorder='big')
+        P1 = int.from_bytes(pt_msg2[260:323],byteorder='big')
+        P2 = int.from_bytes(pt_msg2[324:387],byteorder='big')
+
+        DH2 = SessionKeyGenerator.generate_dh2(G1,G2,P1,P2)
+        self.session_message_key,self.session_mac_key = SessionKeyGenerator.calculate_keys(M1,M2,DH2['Y1'],DH2['Y2'],P1,P2)
+        print(session_message_key,session_mac_key)
+
+        #create+sign+encode+send msg3
+        msg3_pt = str(self.N.to_bytes(4,byteorder='big')) + str(DH2['M1'].to_bytes(64,byteorder='big')) +str(DH2['M2'].to_bytes(64,byteorder='big')))
+        msg3_pt_signed = publickey.sign(self.client_pk_path,msg3_pt)
+        msg3_enc = public_key.encrypt(self.server_public_key,msg3_pt_signed)
+        netif.send_msg('A', msg3_enc.encode('utf-8'))
+
+        return
+
 
     '''
     This function is used to generate the derived message and mac keys for
