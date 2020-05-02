@@ -46,7 +46,7 @@ class Server:
             f.close()
             self.encrypt_and_send(netif, msg_bytes)
 
-    def get_msg_mac_keys(self):
+    def get_msg_mac_keys(self):   
         #more stuff here
         return msg_key, mac_key
     
@@ -64,7 +64,6 @@ class Server:
 
     '''This function takes in a decrypted command and executes it, encrypting and sending back a message to the client if necessary'''
     def parse_command(self, plaincomm):     #COMMAND NEEDS TO BE DECRYPTED BEFORE THIS IS CALLED
-        #test
         netif = network_interface("./NETWORK/","A")    #initialize network
         args = plaincomm.split()
         cmd = (args[0]).upper()
