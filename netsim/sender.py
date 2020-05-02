@@ -2,12 +2,17 @@
 #sender.py
 
 import os, sys, getopt, time
+from encrypt import encrypt
 from netinterface import network_interface
 
 NET_PATH = './'
 OWN_ADDR = 'A'
 
-# ------------       
+# test session keys
+session_msg_key = b'abcdefghijklmnopqrstuvwxyz1234567890'
+session_mac_key = b'zyxwvutsrqponmlkjihgfedcba0987654321'
+
+# ------------
 # main program
 # ------------
 
@@ -40,11 +45,12 @@ if OWN_ADDR not in network_interface.addr_space:
 
 # main loop
 netif = network_interface(NET_PATH, OWN_ADDR)
+encryptionEngine = encrypt(session_msg_key, session_mac_key)
 print('Main loop started...')
 while True:
 	msg = input('Type a message: ')
 	dst = input('Type a destination address: ')
 
-	netif.send_msg(dst, msg.encode('utf-8'))
+	encryptionEngine.send(msg, dst, netif)
 
 	if input('Continue? (y/n): ') == 'n': break
