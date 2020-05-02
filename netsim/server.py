@@ -1,6 +1,7 @@
 import os
 import shutil
 from Crypto.Hash import HMAC, SHA256
+import encrypt
 
 
 '''
@@ -28,26 +29,43 @@ if (label == b'mac'):
 
 #server is address A
 class Server:
-    def __init__(self):
-        self.current_client = "B"
+    def __init__(self, curr_client):
+        self.current_client = curr_client
         self.current_client_dir = "./NETWORK/A/DATA/" + self.current_client + "/"
 
-    def upload_file(self, file):
-        if not os.path.exists(self.current_client_dir + file):
-        
-
-    def download_file(self, filename):
+    def download_file(self, netif, filename):
         path = self.current_client_dir + filename
         if not os.path.exists(path):
-            print ("This file does not exist")
+            msg_str = "This file does not exist!"
+            msg_bytes = msg_str.encode('ascii')
+            self.encrypt_and_send(netif, msg_bytes)
         else:
             f = open(path, "r")
             msg_str = f.read()
             msg_bytes = msg_str.encode('ascii')
+            f.close()
+            self.encrypt_and_send(netif, msg_bytes)
 
-        
+    def get_msg_mac_keys(self):
+        #more stuff here
+        return msg_key, mac_key
+    
+    def get_sqn_number(self):
+        #stuff here
+        return sqn_number
 
-    def parse_command(self, plaincomm):
+    '''used in parse_command, encrypts and sends a message to the client'''
+    def encrypt_and_send(self, netif, msg_bytes):       
+            msg_key, mac_key = self.get_msg_mac_keys()
+            sqn_number = self.get_sqn_number()
+            encrypt_instance = encrypt(msg_bytes, msg_key, mac_key, sqn_number)
+            netif.send_msg(self.current_client, msg_bytes.encode('utf-8'))
+            return
+
+    '''This function takes in a decrypted command and executes it, encrypting and sending back a message to the client if necessary'''
+    def parse_command(self, plaincomm):     #COMMAND NEEDS TO BE DECRYPTED BEFORE THIS IS CALLED
+        #test
+        netif = network_interface("./NETWORK/","A")    #initialize network
         args = plaincomm.split()
         cmd = (args[0]).upper()
         if cmd == "MKD":    #make directory
@@ -55,37 +73,45 @@ class Server:
             os.mkdir(new_dir)
         elif cmd == "RMD":  #remove directory
             dir_arg = args[1]
-            if not os.path.exists(self.current_client_dir + dir_arg):
-                print ("This folder does not exist!")
+            if not os.path.exists(self.current_client_dir + dir_arg):   #if this is invalid path
+                msg_str = "This folder does not exist!"
+                msg_bytes = msg_str.encode('ascii')
+                self.encrypt_and_send(netif, msg_bytes)
             else:
                 shutil.rmtree(self.current_client_dir + dir_arg, ignore_errors=True)
         elif cmd == "GWD":  #get working directory
             msg_bytes = self.current_client_dir.encode('ascii')
-            #send message! TODO
+            self.encrypt_and_send(netif, msg_bytes)
         elif cmd == "CWD":  #change directory
             dir_arg = args[1]
             path = self.current_client_dir + dir_arg
             print (path)
-            if not os.path.exists(path) or (not (self.current_client + "..") in path):
-                #tries to make sure user can't back out of their own folder into other folders - kinda hacky
-                print ("This folder does not exist!")
+            if not os.path.exists(path):    #doesnt actually ensure this is allowed...
+                msg_str = "This folder does not exist!"
+                msg_bytes = msg_str.encode('ascii')
+                self.encrypt_and_send(netif, msg_bytes)
             else:
                 self.current_client_dir = self.current_client_dir + dir_arg
         elif cmd == "LST": #list contents
             lst = os.listdir(self.current_client_dir)
             msgstr = "\t".join(lst)
             msg_bytes = msgstr.encode('ascii')
-            #SEND MESSAGE TODO
-        elif cmd == "UPL":  
-            self.upload_file(args[1])   #TODO?? i am confused on how to do this
+            self.encrypt_and_send(netif, msg_bytes)
+        elif cmd == "UPL":  #form of upl FILENAME FILECONTENT
+            filename = args[1]
+            dafile = " ".join(args[2:])
+            f = open(self.current_client_dir + filename, "w+")
+            f.write(dafile)
+            f.close()
         elif cmd == "DNL":  #download file
-            self.download_file(args[1])
-        elif cmd == "RMF":  #rm file from folder
-            print (self.current_client_dir + args[2] + + "/" + args[1])
-            os.remove(self.current_client_dir + args[2] + + "/" + args[1])   #check formatting
+            self.download_file(netif, args[1])
+        elif cmd == "RMF":  #rm file from folder        #in form of "rmf FILE FOLDER"
+            #print (self.current_client_dir + args[2] + "/" + args[1])
+            os.remove(self.current_client_dir + args[2] + "/" + args[1])   #check formatting
         else:
             msg_str = "Command not found"
             msg_bytes = msg_str.encode('ascii')
+            self.encrypt_and_send(netif, msg_bytes)
 
     '''
     Uses the nonce sent over from the client to generate the derived message or
