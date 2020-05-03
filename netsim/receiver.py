@@ -4,9 +4,11 @@
 import os, sys, getopt, time
 from netinterface import network_interface
 from decrypt import decrypt
+from server import Server
 
 NET_PATH = './'
 OWN_ADDR = 'B'
+SERVER_ADDR = 'B'
 
 # test session keys
 session_msg_key = b'abcdefghijklmnopqrstuvwxyz1234567890'
@@ -49,6 +51,8 @@ decryptionEngine = decrypt(session_msg_key, session_mac_key)
 CLIENT_ADD = 'A'
 msg_for_test = b'Did you get it?'
 print('Main loop started...')
+server = Server(OWN_ADDR,netif=netif,encrypt_instance=decryptionEngine)
+
 while True:
 # Calling receive_msg() in non-blocking mode ...
 #	status, msg = netif.receive_msg(blocking=False)
@@ -74,8 +78,9 @@ while True:
 			print("decrypting message...\n")
 			decrypt_msg = decryptionEngine.decrypt_msg(msg)
 			print(decrypt_msg)
-			if decrypt_msg == "SERVER_COMMAND":
-				netif.send_msg(CLIENT_ADD,msg_for_test)
+			server.parse_command(decrypt_msg)
+			# if decrypt_msg == "SERVER_COMMAND":
+			# 	netif.send_msg(CLIENT_ADD,msg_for_test)
 				
 		else:
 			print("you ain't got no keys bruh")

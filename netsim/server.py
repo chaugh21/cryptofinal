@@ -61,7 +61,7 @@ class Server:
         self.encrypt_instance.send(msg_bytes, self.current_client, self.netif)  
 
     '''This function takes in a decrypted command and executes it, encrypting and sending back a message to the client if necessary'''
-    def parse_command(self, plaincomm),:     #COMMAND NEEDS TO BE DECRYPTED BEFORE THIS IS CALLED... 
+    def parse_command(self, plaincomm):     #COMMAND NEEDS TO BE DECRYPTED BEFORE THIS IS CALLED... 
         args = plaincomm.split()
         cmd = (args[0]).upper()
         if cmd == "MKD":    #make directory
@@ -131,7 +131,7 @@ class Server:
     def confirmlogin(msg):
         UID=msg[0:7].decode('utf-8')
         pwd_str=msg[8:15].decode('utf-8')
-        if(self.userdict[UID][0]= SHA256.new(pwd_str)): #TODO: BETTER ERROrS CLI
+        if(self.userdict[UID][0]== SHA256.new(pwd_str)): #TODO: BETTER ERROrS CLI
             self.client_public_keypath = self.userdict['UID'][1]
             return True, int.from_bytes(msg[16:32],byteorder='big')
         else:
@@ -175,13 +175,13 @@ class Server:
 
         if not (int.from_bytes(msg3_pt_signed[0:3],byteorder='big')==Self.N):
             #Raise an error here that N is not correct
-        MA = int.from_bytes(pt_msg2[4:67],byteorder='big')
-        MB = int.from_bytes(pt_msg2[68:131],byteorder='big')
-        signature = msg3_pt_signed[132:]
+            MA = int.from_bytes(pt_msg2[4:67],byteorder='big')
+            MB = int.from_bytes(pt_msg2[68:131],byteorder='big')
+            signature = msg3_pt_signed[132:]
         #verify the signature
         if not(public_key.verify(self.server_pb_path,signature)):
             #Raise and error here that the message signature did not verify
-        self.session_message_key,self.session_mac_key = SessionKeyGenerator.calculate_keys(MA,MB,X1,X2,DH1_dict['P1'],DH1_dict['P2'])
+            self.session_message_key,self.session_mac_key = SessionKeyGenerator.calculate_keys(MA,MB,X1,X2,DH1_dict['P1'],DH1_dict['P2'])
 
 
         return
