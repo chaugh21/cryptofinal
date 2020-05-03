@@ -14,7 +14,8 @@ class encrypt:
         self.client_addr = client_addr
 
     def secure_payload(self, msg_key, mac_key, msg):
-        msg = msg.encode('utf-8')
+        if (type(msg) != bytes):
+            msg = msg.encode('utf-8')
         self.sqn_number += 1
         payload_length = len(msg)
         padding_length = AES.block_size - payload_length%AES.block_size

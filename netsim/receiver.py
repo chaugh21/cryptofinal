@@ -50,7 +50,7 @@ netif = network_interface(NET_PATH, OWN_ADDR)
 decryptionEngine = decrypt(session_msg_key, session_mac_key)
 encryptionEngine = encrypt(OWN_ADDR, session_msg_key, session_mac_key)
 server = Server(netif, encryptionEngine, NET_PATH + OWN_ADDR)
-print('Main loop started...')
+print('Server started at ' + OWN_ADDR + '...')
 
 while True:
 # Calling receive_msg() in non-blocking mode ...

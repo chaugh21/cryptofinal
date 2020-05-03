@@ -48,11 +48,12 @@ if OWN_ADDR not in network_interface.addr_space:
 netif = network_interface(NET_PATH, OWN_ADDR)
 encryptionEngine = encrypt(OWN_ADDR, session_msg_key, session_mac_key)
 decryptionEngine = decrypt(session_msg_key,session_mac_key)
+dst = input('Type a server address: ')
 receive_mode = True
-print('Main loop started...')
 while True:
-	msg = input('Type a message: ')
-	dst = input('Type a destination address: ')
+	msg = input('>> ')
+
+	if msg == 'exit' or msg == 'quit': break
 
 	encryptionEngine.send(msg, dst, netif)
 	while receive_mode:
@@ -70,6 +71,4 @@ while True:
 					receive_mode = False
 				else:
 					print("you ain't got no keys bruh")
-
-	if input('Continue? (y/n): ') == 'n': break
 	receive_mode = True
