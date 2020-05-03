@@ -5,6 +5,7 @@ import os, sys, getopt, time
 from netinterface import network_interface
 from decrypt import decrypt
 from server import Server
+from encrypt import encrypt
 
 NET_PATH = './'
 OWN_ADDR = 'B'
@@ -48,10 +49,11 @@ if OWN_ADDR not in network_interface.addr_space:
 # main loop
 netif = network_interface(NET_PATH, OWN_ADDR)
 decryptionEngine = decrypt(session_msg_key, session_mac_key)
+encryptionEngine = encrypt(session_msg_key, session_mac_key)
 CLIENT_ADD = 'A'
 msg_for_test = b'Did you get it?'
 print('Main loop started...')
-server = Server(OWN_ADDR,netif=netif,encrypt_instance=decryptionEngine)
+server = Server(CLIENT_ADD,netif=netif,encrypt_instance=encryptionEngine)
 
 while True:
 # Calling receive_msg() in non-blocking mode ...

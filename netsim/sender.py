@@ -4,6 +4,7 @@
 import os, sys, getopt, time
 from encrypt import encrypt
 from netinterface import network_interface
+from decrypt import decrypt
 
 NET_PATH = './'
 OWN_ADDR = 'A'
@@ -46,15 +47,29 @@ if OWN_ADDR not in network_interface.addr_space:
 # main loop
 netif = network_interface(NET_PATH, OWN_ADDR)
 encryptionEngine = encrypt(session_msg_key, session_mac_key)
+decryptionEngine = decrypt(session_msg_key,session_mac_key)
+receive_mode = True
 print('Main loop started...')
 while True:
 	msg = input('Type a message: ')
 	dst = input('Type a destination address: ')
 
 	encryptionEngine.send(msg, dst, netif)
-
-	status, msg = netif.receive_msg(blocking=False)
-	if status: 
-		print(msg)
+	while receive_mode:
+		status, msg = netif.receive_msg(blocking=False)      # when returns, status is True and msg contains a message
+		if status:
+			label, msg = msg[:3], msg[3:]
+			if (label == b'msg'):
+				decryptionEngine.generate_derived_msg_key(msg)
+			elif (label == b'mac'):
+				decryptionEngine.generate_derived_mac_key(msg)
+			elif (label == b'enc'):
+				if decryptionEngine.has_keys():
+					decrypt_msg = decryptionEngine.decrypt_msg(msg)
+					print(decrypt_msg)
+					receive_mode = False
+				else:
+					print("you ain't got no keys bruh")
 
 	if input('Continue? (y/n): ') == 'n': break
+	receive_mode = True
