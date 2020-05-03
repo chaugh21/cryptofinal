@@ -7,10 +7,11 @@ from Crypto.Random import get_random_bytes
 class encrypt:
 
 
-    def __init__(self, session_msg_key = b'', session_mac_key = b'', sqn_number = -1):
+    def __init__(self, client_addr, session_msg_key = b'', session_mac_key = b'', sqn_number = -1):
         self.session_msg_key = session_msg_key
         self.session_mac_key = session_mac_key
         self.sqn_number = sqn_number
+        self.client_addr = client_addr
 
     def secure_payload(self, msg_key, mac_key, msg):
         msg = msg.encode('utf-8')
@@ -20,8 +21,8 @@ class encrypt:
         mac_length = 32  # SHA256 hash value is 32 bytes long
         msg_length = 9 + AES.block_size + payload_length + padding_length + mac_length
         # create header
-        header_version = b'\x01\x01'                            # protocol version 1.1
-        header_type = b'\x01'                                   # message type 1
+        header_version = b'\x01\x01'                          # protocol version 1.1
+        header_type = self.client_addr.encode('utf-8')        # message type 1
         header_length = msg_length.to_bytes(2, byteorder='big') # message length (encoded on 2 bytes)
         header_sqn = self.sqn_number.to_bytes(4, byteorder='big')  # next message sequence number (encoded on 4 bytes)
         header = header_version + header_type + header_length + header_sqn

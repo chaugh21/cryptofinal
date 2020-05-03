@@ -3,36 +3,13 @@ import shutil
 from Crypto.Hash import HMAC, SHA256
 import encrypt
 
-
-'''
-Putting this here for future use. Essentially this is the server side logic for
-generating the derived keys from the nonces sent by the client. This should be
-in the pipeline for the whole message send / receive / decrypt flow. These keys
-will be used to decrypt the in app commands sent from the client. This is assuming
-that msg in this case is of type bytes where it has the following format:
-
-label | nonce
-
-where label is either b'msg' or b'mac' what the following nonce will be used to
-create.
-
-label, nonce = msg[:-256], msg[-256:]
-
-if (label == b'msg'):
-    msg_key = self.generate_derived_key(session_msg_key, nonce)
-    print("msg_key:", msg_key.hex())
-
-if (label == b'mac'):
-    mac_key = self.generate_derived_key(session_mac_key, nonce)
-    print("mac_key:", mac_key.hex())
-'''
-
-#server is address A
 class Server:
-    def __init__(self, curr_client, netif, encrypt_instance):
-        self.current_client = curr_client
+    def __init__(self, netif, encrypt_instance, server_dir):
+        self.current_client = ''
+        self.current_client_userid = 'Sagar'     #TODO: shouldn't be hard coded
+        self.server_dir = server_dir
         self.netif = netif
-        self.current_client_dir = "./NETWORK/A/DATA/" + self.current_client + "/"
+        self.current_client_dir = server_dir + "/DATA/"
         self.encrypt_instance = encrypt_instance
         self.server_pb_path = ''
         self.server_pk_path = ''
@@ -42,6 +19,19 @@ class Server:
         self.session_mac_key=0
         self.session_msg_key=0
 
+        # make data folder if it's not there already
+        if not os.path.exists(self.current_client_dir):
+          os.mkdir(self.current_client_dir)
+
+    def set_client(self, from_msg):
+        client = from_msg[2:3].decode('utf-8')
+        if self.current_client == client:
+            return
+        self.current_client = client
+        self.current_client_dir += self.current_client_userid + "/"
+        if not os.path.exists(self.current_client_dir):
+            os.mkdir(self.current_client_dir)
+
     '''used in parse_command'''
     def download_file(self, filename):
         path = self.current_client_dir + filename
@@ -50,16 +40,16 @@ class Server:
             self.encrypt_and_send(msg_str)    #send err message to client
         else:           #read in file and convert to bytes
             f = open(path, "r")
-            msg_str = f.read()      
+            msg_str = f.read()
             f.close()
             self.encrypt_and_send(msg_str)    #send file as bytes to client
 
     '''used in parse_command, encrypts and sends a message to the client'''
     def encrypt_and_send(self, msg_string):
-        self.encrypt_instance.send(msg_string, self.current_client, self.netif)  
+        self.encrypt_instance.send(msg_string, self.current_client, self.netif)
 
     '''This function takes in a decrypted command and executes it, encrypting and sending back a message to the client if necessary'''
-    def parse_command(self, plaincomm):     #COMMAND NEEDS TO BE DECRYPTED BEFORE THIS IS CALLED... 
+    def parse_command(self, plaincomm):     #COMMAND NEEDS TO BE DECRYPTED BEFORE THIS IS CALLED...
         args = plaincomm.split()
         cmd = (args[0]).upper()
         if cmd == "MKD":    #make directory
@@ -77,15 +67,14 @@ class Server:
         elif cmd == "CWD":  #change directory
             dir_arg = args[1]
             path = self.current_client_dir + dir_arg
-            #print (path)
-            if not os.path.exists(path):    
+            if not os.path.exists(path):
                 msg_str = "This folder does not exist!"
                 self.encrypt_and_send(msg_str)
             else:
                 self.current_client_dir = self.current_client_dir + dir_arg
         elif cmd == "LST": #list contents
             lst = os.listdir(self.current_client_dir)
-            msgstr = "\t".join(lst)
+            msg_str = "\t".join(lst)
             self.encrypt_and_send(msg_str)
         elif cmd == "UPL":  #form of upl FILENAME FILECONTENT
             filename = args[1]

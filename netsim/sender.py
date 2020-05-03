@@ -46,7 +46,7 @@ if OWN_ADDR not in network_interface.addr_space:
 
 # main loop
 netif = network_interface(NET_PATH, OWN_ADDR)
-encryptionEngine = encrypt(session_msg_key, session_mac_key)
+encryptionEngine = encrypt(OWN_ADDR, session_msg_key, session_mac_key)
 decryptionEngine = decrypt(session_msg_key,session_mac_key)
 receive_mode = True
 print('Main loop started...')
