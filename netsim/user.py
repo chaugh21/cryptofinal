@@ -2,6 +2,7 @@ import Crypto,SessionKeyGenerator,sys
 from netinterface import network_interface
 from Crypto.Hash import HMAC, SHA256
 from Crypto.Random import get_random_bytes
+import encrypt
 
 class User:
 
@@ -9,7 +10,7 @@ class User:
     OWN_ADDR = 'B'
 
 
-    def __init__(self):
+    def __init__(self, netif, encrypt_instance):
         self.N=0
         self.X1 =0
         self.X2=0
@@ -18,6 +19,8 @@ class User:
         self.userid = ''
         self.session_msg_key=0
         self.session_mac_key=0
+        self.netif = netif
+        self.encrypt_instance = encrypt_instance
         return
 
 
@@ -41,9 +44,9 @@ class User:
         enc_msg1 = gen_message1(self.userid,pwd_str)
 
         # init the netinterface
-        netif = network_interface(NET_PATH,OWN_ADDR)
+        #netif = network_interface(NET_PATH,OWN_ADDR)
         #send M1
-        netif.send_msg('A', enc_msg.encode('utf-8'))
+        self.netif.send_msg('A', enc_msg.encode('utf-8'))
 
         #Wait for M2
         while (status == None):
@@ -75,7 +78,7 @@ class User:
         msg3_pt = str(self.N.to_bytes(4,byteorder='big')) + str(DH2['M1'].to_bytes(64,byteorder='big')) +str(DH2['M2'].to_bytes(64,byteorder='big')))
         msg3_pt_signed = publickey.sign(self.client_pk_path,msg3_pt)
         msg3_enc = public_key.encrypt(self.server_public_key,msg3_pt_signed)
-        netif.send_msg('A', msg3_enc.encode('utf-8'))
+        self.netif.send_msg('A', msg3_enc.encode('utf-8'))
 
         return
 

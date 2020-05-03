@@ -29,11 +29,11 @@ if (label == b'mac'):
 
 #server is address A
 class Server:
-    def __init__(self, curr_client, netif):
+    def __init__(self, curr_client, netif, encrypt_instance):
         self.current_client = curr_client
         self.netif = netif
         self.current_client_dir = "./NETWORK/A/DATA/" + self.current_client + "/"
-
+        self.encrypt_instance = encrypt_instance
         self.server_pb_path = ''
         self.server_pk_path = ''
         self.client_pb_path = ''
@@ -42,29 +42,23 @@ class Server:
         self.session_mac_key=0
         self.session_msg_key=0
 
-
+    '''used in parse_command'''
     def download_file(self, filename):
         path = self.current_client_dir + filename
         if not os.path.exists(path):
             msg_str = "This file does not exist!"
             msg_bytes = msg_str.encode('ascii')
             self.encrypt_and_send(msg_bytes)    #send err message to client
-        else:
+        else:           #read in file and convert to bytes
             f = open(path, "r")
-            msg_str = f.read()
+            msg_str = f.read()      
             msg_bytes = msg_str.encode('ascii')
             f.close()
             self.encrypt_and_send(msg_bytes)    #send file as bytes to client
 
-    def get_sqn_number(self):
-        #stuff here
-        return sqn_number
-
     '''used in parse_command, encrypts and sends a message to the client'''
     def encrypt_and_send(self, msg_bytes):
-            sqn_number = self.get_sqn_number()
-            encrypt_instance = encrypt(self.session_msg_key, self.session_mac_key, sqn_number)  
-            encrypt_instance.send(msg_bytes, self.current_client, self.netif)   #this function does all the work
+        self.encrypt_instance.send(msg_bytes, self.current_client, self.netif)  
 
     '''This function takes in a decrypted command and executes it, encrypting and sending back a message to the client if necessary'''
     def parse_command(self, plaincomm),:     #COMMAND NEEDS TO BE DECRYPTED BEFORE THIS IS CALLED... 
