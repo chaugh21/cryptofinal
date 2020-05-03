@@ -47,18 +47,16 @@ class Server:
         path = self.current_client_dir + filename
         if not os.path.exists(path):
             msg_str = "This file does not exist!"
-            msg_bytes = msg_str.encode('ascii')
-            self.encrypt_and_send(msg_bytes)    #send err message to client
+            self.encrypt_and_send(msg_str)    #send err message to client
         else:           #read in file and convert to bytes
             f = open(path, "r")
             msg_str = f.read()      
-            msg_bytes = msg_str.encode('ascii')
             f.close()
-            self.encrypt_and_send(msg_bytes)    #send file as bytes to client
+            self.encrypt_and_send(msg_str)    #send file as bytes to client
 
     '''used in parse_command, encrypts and sends a message to the client'''
-    def encrypt_and_send(self, msg_bytes):
-        self.encrypt_instance.send(msg_bytes, self.current_client, self.netif)  
+    def encrypt_and_send(self, msg_string):
+        self.encrypt_instance.send(msg_string, self.current_client, self.netif)  
 
     '''This function takes in a decrypted command and executes it, encrypting and sending back a message to the client if necessary'''
     def parse_command(self, plaincomm):     #COMMAND NEEDS TO BE DECRYPTED BEFORE THIS IS CALLED... 
@@ -71,28 +69,24 @@ class Server:
             dir_arg = args[1]
             if not os.path.exists(self.current_client_dir + dir_arg):   #if this is invalid path
                 msg_str = "This folder does not exist!"
-                msg_bytes = msg_str.encode('ascii')
-                self.encrypt_and_send(msg_bytes)
+                self.encrypt_and_send(msg_str)
             else:
                 shutil.rmtree(self.current_client_dir + dir_arg, ignore_errors=True)
         elif cmd == "GWD":  #get working directory
-            msg_bytes = self.current_client_dir.encode('ascii')
-            self.encrypt_and_send(msg_bytes)
+            self.encrypt_and_send(self.current_client_dir)
         elif cmd == "CWD":  #change directory
             dir_arg = args[1]
             path = self.current_client_dir + dir_arg
-            print (path)
+            #print (path)
             if not os.path.exists(path):    
                 msg_str = "This folder does not exist!"
-                msg_bytes = msg_str.encode('ascii')
-                self.encrypt_and_send(msg_bytes)
+                self.encrypt_and_send(msg_str)
             else:
                 self.current_client_dir = self.current_client_dir + dir_arg
         elif cmd == "LST": #list contents
             lst = os.listdir(self.current_client_dir)
             msgstr = "\t".join(lst)
-            msg_bytes = msgstr.encode('ascii')
-            self.encrypt_and_send(msg_bytes)
+            self.encrypt_and_send(msg_str)
         elif cmd == "UPL":  #form of upl FILENAME FILECONTENT
             filename = args[1]
             dafile = " ".join(args[2:])
@@ -105,8 +99,7 @@ class Server:
             os.remove(self.current_client_dir + args[2] + "/" + args[1])   #check formatting
         else:
             msg_str = "Command not found"
-            msg_bytes = msg_str.encode('ascii')
-            self.encrypt_and_send(msg_bytes)
+            self.encrypt_and_send(msg_str)
 
     '''
     Uses the nonce sent over from the client to generate the derived message or
