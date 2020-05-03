@@ -74,7 +74,7 @@ class Server:
                 self.encrypt_and_send(msg_str)
             else:
                 self.current_client_dir = self.current_client_dir + dir_arg
-                self.encrypt_and_send("New directory: " + self.current_client_dir + dir_arg)
+                self.encrypt_and_send("Current directory: " + self.current_client_dir)
         elif cmd == "LST": #list contents
             lst = os.listdir(self.current_client_dir)
             msg_str = "\t".join(lst)
