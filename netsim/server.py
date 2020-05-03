@@ -65,6 +65,7 @@ class Server:
         if cmd == "MKD":    #make directory
             new_dir = self.current_client_dir + args[1]
             os.mkdir(new_dir)
+            self.encrypt_and_send("Created directory " + new_dir)
         elif cmd == "RMD":  #remove directory
             dir_arg = args[1]
             if not os.path.exists(self.current_client_dir + dir_arg):   #if this is invalid path
@@ -72,6 +73,7 @@ class Server:
                 self.encrypt_and_send(msg_str)
             else:
                 shutil.rmtree(self.current_client_dir + dir_arg, ignore_errors=True)
+                self.encrypt_and_send("Removed directory " + self.current_client_dir + dir_arg)
         elif cmd == "GWD":  #get working directory
             self.encrypt_and_send(self.current_client_dir)
         elif cmd == "CWD":  #change directory
@@ -83,6 +85,7 @@ class Server:
                 self.encrypt_and_send(msg_str)
             else:
                 self.current_client_dir = self.current_client_dir + dir_arg
+                self.encrypt_and_send("New directory: " + self.current_client_dir + dir_arg)
         elif cmd == "LST": #list contents
             lst = os.listdir(self.current_client_dir)
             msgstr = "\t".join(lst)
@@ -93,10 +96,12 @@ class Server:
             f = open(self.current_client_dir + filename, "w+")
             f.write(dafile)
             f.close()
+            self.encrypt_and_send("Uploaded file " + filename)
         elif cmd == "DNL":  #download file
             self.download_file(args[1])
         elif cmd == "RMF":  #rm file from folder        #in form of "rmf FILE FOLDER"
             os.remove(self.current_client_dir + args[2] + "/" + args[1])   #check formatting
+            self.encrypt_and_send("Removed file " + args[1])
         else:
             msg_str = "Command not found"
             self.encrypt_and_send(msg_str)
