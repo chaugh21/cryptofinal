@@ -46,12 +46,15 @@ if OWN_ADDR not in network_interface.addr_space:
 # main loop
 netif = network_interface(NET_PATH, OWN_ADDR)
 decryptionEngine = decrypt(session_msg_key, session_mac_key)
+CLIENT_ADD = 'A'
+msg_for_test = b'Did you get it?'
 print('Main loop started...')
 while True:
 # Calling receive_msg() in non-blocking mode ...
 #	status, msg = netif.receive_msg(blocking=False)
 #	if status: print(msg)      # if status is True, then a message was returned in msg
 #	else: time.sleep(2)        # otherwise msg is empty
+
 
 # Calling receive_msg() in blocking mode ...
 	status, msg = netif.receive_msg(blocking=True)      # when returns, status is True and msg contains a message
@@ -69,6 +72,10 @@ while True:
 	elif (label == b'enc'):
 		if decryptionEngine.has_keys():
 			print("decrypting message...\n")
-			print(decryptionEngine.decrypt_msg(msg))
+			decrypt_msg = decryptionEngine.decrypt_msg(msg)
+			print(decrypt_msg)
+			if decrypt_msg == "SERVER_COMMAND":
+				netif.send_msg(CLIENT_ADD,msg_for_test)
+				
 		else:
 			print("you ain't got no keys bruh")

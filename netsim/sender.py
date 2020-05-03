@@ -53,4 +53,8 @@ while True:
 
 	encryptionEngine.send(msg, dst, netif)
 
+	status, msg = netif.receive_msg(blocking=False)
+	if status: 
+		print(msg)
+
 	if input('Continue? (y/n): ') == 'n': break
