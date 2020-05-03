@@ -9,7 +9,6 @@ from encrypt import encrypt
 
 NET_PATH = './'
 OWN_ADDR = 'B'
-SERVER_ADDR = 'B'
 
 # test session keys
 session_msg_key = b'abcdefghijklmnopqrstuvwxyz1234567890'
@@ -49,11 +48,9 @@ if OWN_ADDR not in network_interface.addr_space:
 # main loop
 netif = network_interface(NET_PATH, OWN_ADDR)
 decryptionEngine = decrypt(session_msg_key, session_mac_key)
-encryptionEngine = encrypt(session_msg_key, session_mac_key)
-CLIENT_ADD = 'A'
-msg_for_test = b'Did you get it?'
+encryptionEngine = encrypt(OWN_ADDR, session_msg_key, session_mac_key)
+server = Server(netif, encryptionEngine, NET_PATH + OWN_ADDR)
 print('Main loop started...')
-server = Server(CLIENT_ADD,netif=netif,encrypt_instance=encryptionEngine)
 
 while True:
 # Calling receive_msg() in non-blocking mode ...
@@ -76,13 +73,12 @@ while True:
 		print("mac_key received...")
 
 	elif (label == b'enc'):
+		server.set_client(msg)
 		if decryptionEngine.has_keys():
-			print("decrypting message...\n")
+			print("decrypting message...")
 			decrypt_msg = decryptionEngine.decrypt_msg(msg)
-			print(decrypt_msg)
+			print("running command: ", decrypt_msg)
 			server.parse_command(decrypt_msg)
-			# if decrypt_msg == "SERVER_COMMAND":
-			# 	netif.send_msg(CLIENT_ADD,msg_for_test)
-				
+
 		else:
 			print("you ain't got no keys bruh")
