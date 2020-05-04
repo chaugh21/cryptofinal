@@ -40,14 +40,15 @@ class Server:
             msg_str = "This file does not exist!"
             self.encrypt_and_send(msg_str)    #send err message to client
         else:           #read in file and convert to bytes
-            f = open(path, "r")
-            msg_str = f.read()
-            f.close()
-            self.encrypt_and_send(msg_str)    #send file as bytes to client
+            self.encrypt_and_send(path, True)    #send file as bytes to client
+            self.encrypt_and_send("Downloaded file " + filename)
 
     '''used in parse_command, encrypts and sends a message to the client'''
-    def encrypt_and_send(self, msg_string):
-        self.encrypt_instance.send(msg_string, self.current_client, self.netif)
+    def encrypt_and_send(self, msg_string, isFile=False):
+        if isFile:
+            self.encrypt_instance.send_file(msg_string, self.current_client, self.netif)
+        else:
+            self.encrypt_instance.send(msg_string, self.current_client, self.netif)
 
     '''This function takes in a decrypted command and executes it, encrypting and sending back a message to the client if necessary'''
     def parse_command(self, plaincomm):     #COMMAND NEEDS TO BE DECRYPTED BEFORE THIS IS CALLED...

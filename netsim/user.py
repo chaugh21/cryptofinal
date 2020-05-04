@@ -20,6 +20,7 @@ class User:
         self.session_msg_key=0
         self.session_mac_key=0
         self.netif = netif
+        self.filename = ""
         self.encrypt_instance = encrypt_instance
         return
 
