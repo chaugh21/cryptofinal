@@ -88,7 +88,6 @@ class User:
         self.netif.send_msg(self.server_addr, msg3_enc + msg3_pt_sig)
 
         print('login protocol successful deriving session keys:')
-        print(self.session_message_key,self.session_mac_key)
         return
 
 

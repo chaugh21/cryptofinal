@@ -146,7 +146,6 @@ class Server:
     def confirmlogin(self,msg):
         msg1_json = msg.decode('utf-8')
         msg1_dict=json.loads(msg1_json)
-        print(msg1_dict)
 
         try:
             self.userdict[msg1_dict["uid"]]
@@ -187,7 +186,6 @@ class Server:
         DH1_dict["N"] = self.N #append N
 
         print("DH1 sent with parameters:")
-        print(DH1_dict)
         DH1_final_pt = json.dumps(DH1_dict).encode('utf-8') #final json palintext
 
         # create signature
@@ -213,7 +211,5 @@ class Server:
             print('error: Nonce did not match, Authentication of Message Failed')
             sys.exit(1)
         self.session_message_key,self.session_mac_key = SessionKeyGenerator.calculate_keys(msg3_dict["MA"],msg3_dict["MB"],X1,X2,DH1_dict['P1'],DH1_dict['P2'])
-        print('final keys')
-        print(self.session_message_key,self.session_mac_key)
 
         return
