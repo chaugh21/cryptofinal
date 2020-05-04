@@ -53,12 +53,16 @@ class Server:
             self.encrypt_and_send("Downloaded file " + filename)
 
     def cwd(self, dir_arg):
+        home_dir = self.server_dir + "/DATA/" + self.current_client_userid + "/"
         pathlst = self.current_client_dir.split("/")
         pathlst = pathlst[:-1]
         dirlst = dir_arg.split("/")
         for x in dirlst:
             if x == "..":
-                pathlst = pathlst[:-1]
+                if "/".join(pathlst) + "/" == home_dir:
+                    return ""
+                else:
+                    pathlst = pathlst[:-1]
             elif x != ".":
                 pathlst.append(x)
         path = "/".join(pathlst)
@@ -97,8 +101,12 @@ class Server:
                 msg_str = "This folder does not exist!"
                 self.encrypt_and_send(msg_str)
             else:
-                self.current_client_dir = self.cwd(dir_arg)
-                self.encrypt_and_send("Current directory: " + self.current_client_dir)
+                cwd = self.cwd(dir_arg)
+                if (cwd != ""):
+                    self.current_client_dir = self.cwd(dir_arg)
+                    self.encrypt_and_send("Current directory: " + self.current_client_dir)
+                else:
+                    self.encrypt_and_send("This folder does not exist!")
         elif cmd == "LST": #list contents
             lst = os.listdir(self.current_client_dir)
             msg_str = "\t".join(lst)
