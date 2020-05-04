@@ -2,23 +2,32 @@ import os
 import shutil
 from Crypto.Hash import HMAC, SHA256
 import encrypt
+from public_key import public_key
+from netinterface import network_interface
+from sessionkeygen import SessionKeyGenerator
+import json
+import sys
+
+
 
 class Server:
-    def __init__(self, netif, encrypt_instance, server_dir):
-        self.file = b''
-        self.current_client = ''
+
+    def __init__(self, netif,encrypt_instance, server_dir):
+        self.current_client = None
         self.current_client_userid = 'Sagar'     #TODO: shouldn't be hard coded
         self.server_dir = server_dir
+        self.encrypt_instance=encrypt_instance
         self.netif = netif
         self.current_client_dir = server_dir + "/DATA/"
-        self.encrypt_instance = encrypt_instance
-        self.server_pb_path = ''
-        self.server_pk_path = ''
-        self.client_pb_path = ''
+        self.server_pb_path = "./server_pk.pem"
+        self.server_pk_path = "./server_pb.pem"
+        self.client_pb_path = "./client_pb.pem"
+        public_key.generate_key_pair(self.server_pb_path,self.server_pk_path)
+        self.userdict = {'John': ("Smith",'./client_pb.pem'), 'Raz': ("Mataz",'./client_pb.pem'), 'oatmeal': ('soymilk','./client_pb.pem')}
         self.N = 0
         # self.userdict = {'John': (SHA256.new('Smith'),'/pbkey.?')}
-        self.session_mac_key=0
-        self.session_msg_key=0
+        self.session_message_key=''
+        self.session_mac_key=''
 
         # make data folder if it's not there already
         if not os.path.exists(self.current_client_dir):
@@ -115,60 +124,77 @@ class Server:
     '''
     Handles login
     '''
-    # def confirmlogin(msg):
-    #     UID=msg[0:7].decode('utf-8')
-    #     pwd_str=msg[8:15].decode('utf-8')
-    #     if(self.userdict[UID][0]== SHA256.new(pwd_str)): #TODO: BETTER ERROrS CLI
-    #         self.client_public_keypath = self.userdict['UID'][1]
-    #         return True, int.from_bytes(msg[16:32],byteorder='big')
-    #     else:
-    #          print('invalid password recieved')
-    #          return False, 0
+    def confirmlogin(self,msg):
+        msg1_json = msg.decode('utf-8')
+        msg1_dict=json.loads(msg1_json)
+        print(msg1_dict)
+
+        try:
+            self.userdict[msg1_dict["uid"]]
+        except(KeyError):
+            print("Invalid User ID: login unsucessful")
+            sys,exit(1)
+
+        if(self.userdict[msg1_dict["uid"]][0]==msg1_dict["pwd"]):
+            self.client_public_keypath = self.userdict[msg1_dict["uid"]][1]
+            self.current_client = msg1_dict["ADDR"]
+            return True, msg1_dict["N"]
+        else:
+             print('invalid password recieved, login failed.')
+             sys.exit(1)
+             return False, 0
 
 
-    # def handle_login():
-    #     netif = network_interface(NET_PATH, OWN_ADDR)
-    #     print('Waiting For Login Attempt')
-    #     status = None
-    #     while (status == None):
-    #     	status, lgn_msg = netif.receive_msg(blocking=True)      # when returns, status is True and msg contains a message
+    def handle_login(self):
+        print('Waiting For Login Attempt')
+        status = None
+        while (status == None):
+        	status, lgn_msg = self.netif.receive_msg(blocking=True)      # when returns, status is True and msg contains a message
 
-    #     #deencrypt with the private key.
-    #     lgn_msg_dec = public_key.decrypt(self.private_key_path,lgn_msg)
+        print('recieved login request...')
+        #deencrypt with the private key.
+        lgn_msg_dec = public_key.decrypt(self.server_pk_path,lgn_msg)
 
-    #     #confirm the userid,password pair matches, and return the current_usr_public_key_path
-    #     status,self.N = confirmlogin(lgn_msg_dec)
-
-    #     #generate the first DH message and secrets X1
-    #     DH1_dict=SessionKeyGenerator.generate_dh1()
-    #     X1 = DH1_dict['X1']
-    #     X2 = DH1_dict['X2']
-    #     DH1_msg = str(DH1_dict['M1'].to_bytes(64,byteorder='big'))+str(DH1_dict['M2'].to_bytes(64,byteorder='big'))+str(DH1_dict['G1'].to_bytes(64,byteorder='big'))+str(DH1_dict['G2'].to_bytes(64,byteorder='big'))+str(DH1_dict['P1'].to_bytes(64,byteorder='big'))+str(DH1_dict['P2'].to_bytes(64,byteorder='big'))
-
-    #     #sign the message
-    #     DH1_msg_signed = public_key.sign(self.server_pk_path,DH1_msg)
-
-    #     #append to nonce
-    #     DH1_final_pt = str(self.N.to_bytes(4,byteorder='big')) + DH1_msg_signed
-    #     DH1_final_enc = publickey.encrypt(self.client_pb_path,DH1_final_pt)
-
-    #     netif.send_msg(self.current_client, DH1_final_enc.encode('utf-8'))
-
-    #     status = None
-    #     while (status == None):
-    #     	status, msg3_enc = netif.receive_msg(blocking=True)
-
-    #     msg3_pt_signed= public_key.decrypt(self.client_pk_path,msg3_enc)
-
-    #     if not (int.from_bytes(msg3_pt_signed[0:3],byteorder='big')==Self.N):
-    #         #Raise an error here that N is not correct
-    #         MA = int.from_bytes(pt_msg2[4:67],byteorder='big')
-    #         MB = int.from_bytes(pt_msg2[68:131],byteorder='big')
-    #         signature = msg3_pt_signed[132:]
-    #     #verify the signature
-    #     if not(public_key.verify(self.server_pb_path,signature)):
-    #         #Raise and error here that the message signature did not verify
-    #         self.session_message_key,self.session_mac_key = SessionKeyGenerator.calculate_keys(MA,MB,X1,X2,DH1_dict['P1'],DH1_dict['P2'])
+        #confirm the userid,password pair matches, and return the current_usr_public_key_path
+        status,self.N = self.confirmlogin(lgn_msg_dec)
+        if(status):
+            print('Login Completed, generating first DH message')
 
 
-    #     return
+        #generate the first DH message and secrets X1,X2
+        DH1_dict=SessionKeyGenerator.generate_dh1()
+        X1 = DH1_dict.pop("X1",None)
+        X2 = DH1_dict.pop("X2",None)
+        DH1_dict["N"] = self.N #append N
+
+        print("DH1 sent with parameters:")
+        print(DH1_dict)
+        DH1_final_pt = json.dumps(DH1_dict).encode('utf-8') #final json palintext
+
+        # create signature
+        DH1_final_pt_sig = public_key.sign(self.server_pk_path,DH1_final_pt)
+        DH1_final_enc = public_key.encrypt(self.client_pb_path,DH1_final_pt)
+
+        self.netif.send_msg(self.current_client, DH1_final_enc + DH1_final_pt_sig)
+
+        status = None
+        while (status == None):
+        	status, msg3_enc = self.netif.receive_msg(blocking=True)
+
+        msg3_pt= public_key.decrypt(self.server_pk_path,msg3_enc[0:256])
+        msg3_sig = msg3_enc[256:]
+        #print('msg3_sig' + str(type(msg3_sig)))
+        #print(msg3_sig)
+        public_key.verify(self.client_pb_path,msg3_sig,msg3_pt)
+        msg3_json=msg3_pt.decode('utf-8')
+        msg3_dict= json.loads(msg3_json)
+        print(msg3_dict)
+
+        if not (msg3_dict["N"]==self.N):
+            print('error: Nonce did not match, Authentication of Message Failed')
+            sys.exit(1)
+        self.session_message_key,self.session_mac_key = SessionKeyGenerator.calculate_keys(msg3_dict["MA"],msg3_dict["MB"],X1,X2,DH1_dict['P1'],DH1_dict['P2'])
+        print('final keys')
+        print(self.session_message_key,self.session_mac_key)
+
+        return
