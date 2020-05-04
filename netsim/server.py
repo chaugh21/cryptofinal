@@ -14,7 +14,7 @@ class Server:
 
     def __init__(self, netif,encrypt_instance, server_dir):
         self.current_client = None
-        self.current_client_userid = 'Sagar'     #TODO: shouldn't be hard coded
+        self.current_client_userid = ''     #TODO: shouldn't be hard coded
         self.server_dir = server_dir
         self.encrypt_instance=encrypt_instance
         self.netif = netif
@@ -55,9 +55,7 @@ class Server:
     def cwd(self, dir_arg):
         pathlst = self.current_client_dir.split("/")
         pathlst = pathlst[:-1]
-        print (pathlst)
         dirlst = dir_arg.split("/")
-        print (dirlst)
         for x in dirlst:
             if x == "..":
                 pathlst = pathlst[:-1]
@@ -117,7 +115,16 @@ class Server:
             os.remove(self.current_client_dir + args[2] + "/" + args[1])   #check formatting
             self.encrypt_and_send("Removed file " + args[1])
         else:
-            msg_str =  "List of commands: \nMake Directory: MKD <foldername> \n Remove Directory: RMD <foldername> \n Get Directory GWD \n List Directory LST \n Upload file: UPL <filename> <filecontents> \n Download File: DNL <filename> "
+            msg_str =  """Invalid command. Try one of these:
+Make Directory: MKD <foldername>
+Remove Directory: RMD <foldername>
+Get Working Directory: GWD
+Change Working Directory: CWD
+List Contents: LST
+Upload file: UPL <filename>
+Download File: DNL <filename>
+Remove File from Folder: RMF <filname> <foldername>
+            """
             self.encrypt_and_send(msg_str)
 
     # def useable_commands(self):
@@ -156,6 +163,7 @@ class Server:
         if(self.userdict[msg1_dict["uid"]][0]==msg1_dict["pwd"]):
             self.client_public_keypath = self.userdict[msg1_dict["uid"]][1]
             self.current_client = msg1_dict["ADDR"]
+            self.current_client_userid = msg1_dict["uid"]
             self.current_client_dir += self.current_client_userid + "/"
             if not os.path.exists(self.current_client_dir):
                 os.mkdir(self.current_client_dir)
@@ -172,14 +180,14 @@ class Server:
         while (status == None):
         	status, lgn_msg = self.netif.receive_msg(blocking=True)      # when returns, status is True and msg contains a message
 
-        print('recieved login request...')
+        print('received login request...')
         #deencrypt with the private key.
         lgn_msg_dec = public_key.decrypt(self.server_pk_path,lgn_msg)
 
         #confirm the userid,password pair matches, and return the current_usr_public_key_path
         status,self.N = self.confirmlogin(lgn_msg_dec)
         if(status):
-            print('Login Completed, generating first DH message')
+            print('Login Completed')
 
 
         #generate the first DH message and secrets X1,X2
@@ -188,7 +196,6 @@ class Server:
         X2 = DH1_dict.pop("X2",None)
         DH1_dict["N"] = self.N #append N
 
-        print("DH1 sent with parameters:")
         DH1_final_pt = json.dumps(DH1_dict).encode('utf-8') #final json palintext
 
         # create signature
@@ -203,12 +210,9 @@ class Server:
 
         msg3_pt= public_key.decrypt(self.server_pk_path,msg3_enc[0:256])
         msg3_sig = msg3_enc[256:]
-        #print('msg3_sig' + str(type(msg3_sig)))
-        #print(msg3_sig)
         public_key.verify(self.client_pb_path,msg3_sig,msg3_pt)
         msg3_json=msg3_pt.decode('utf-8')
         msg3_dict= json.loads(msg3_json)
-        print(msg3_dict)
 
         if not (msg3_dict["N"]==self.N):
             print('error: Nonce did not match, Authentication of Message Failed')

@@ -7,10 +7,8 @@ from decrypt import decrypt
 from server import Server
 from encrypt import encrypt
 
-NET_PATH = './'
-OWN_ADDR = 'B'
-
-# test session keys
+NET_PATH = ''
+OWN_ADDR = ''
 
 # ------------
 # main program

@@ -11,7 +11,6 @@ class SessionKeyGenerator:
         #generate two large primes. to do so, generate a list of large primes and choose two randomly.
         P1 = generate_prime_number() # Strong primes have p-1 p+1 with a large prime factor.
         P2 = generate_prime_number()
-        print(P1,P2)
         # create our generator G. from taking group theory that for all cyclic groups of prime numbers of order >2 all elements are generators so we can select one at random.
         G1 = random.randint(1, P1)
         G2 = random.randint(1, P2)

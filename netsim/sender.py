@@ -55,13 +55,26 @@ while True:
 
 	if msg == 'exit' or msg == 'quit': break
 
+	if msg == 'help':
+		print("""List of commands:
+Make Directory: MKD <foldername>
+Remove Directory: RMD <foldername>
+Get Working Directory: GWD
+Change Working Directory: CWD
+List Contents: LST
+Upload file: UPL <filename>
+Download File: DNL <filename>
+Remove File from Folder: RMF <filname> <foldername>
+		""")
+		continue
+
 	if msg[:3] == 'UPL':
 		_, filename = msg.split()
 		encryptionEngine.send_file(NET_PATH + OWN_ADDR + "/" + filename, dst, netif)
 
 	if msg[:3] == 'DNL':
 		_, filename = msg.split()
-		FILENAME = filename
+		user.filename = filename
 
 	encryptionEngine.send(msg, dst, netif)
 
@@ -75,7 +88,7 @@ while True:
 				decryptionEngine.generate_derived_mac_key(msg)
 			elif (label == b'fil'):
 				data = decryptionEngine.decrypt_msg(msg, True)
-				f = open(NET_PATH + OWN_ADDR + "/" + FILENAME, "wb+")
+				f = open(NET_PATH + OWN_ADDR + "/" + user.filename, "wb+")
 				f.write(data)
 				f.close()
 			elif (label == b'enc'):

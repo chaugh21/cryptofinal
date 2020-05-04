@@ -6,7 +6,6 @@ from Crypto.Random import get_random_bytes
 
 class encrypt:
 
-
     def __init__(self, client_addr, session_msg_key = b'', session_mac_key = b'', sqn_number = -1):
         self.session_msg_key = session_msg_key
         self.session_mac_key = session_mac_key
