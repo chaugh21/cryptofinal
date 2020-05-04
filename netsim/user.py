@@ -23,6 +23,7 @@ class User:
         self.session_message_key=''
         self.session_message_key=''
         self.netif = netif
+        self.filename = ""
         self.server_pb_path= 'server_pb.pem' # Our assumption is that an attacker cannot access these
         self.client_pk_path='client_pk.pem'
         self.client_pb_path= 'client_pb.pem'

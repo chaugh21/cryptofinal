@@ -9,6 +9,7 @@ from user import User
 
 NET_PATH = './'
 OWN_ADDR = 'A'
+FILENAME = "" #TODO: this variable should live in user.py
 
 # test session keys
 session_msg_key = b'abcdefghijklmnopqrstuvwxyz1234567890'
@@ -62,6 +63,10 @@ while True:
 		_, filename = msg.split()
 		encryptionEngine.send_file(NET_PATH + OWN_ADDR + "/" + filename, dst, netif)
 
+	if msg[:3] == 'DNL':
+		_, filename = msg.split()
+		FILENAME = filename
+
 	encryptionEngine.send(msg, dst, netif)
 
 	while receive_mode:
@@ -72,6 +77,11 @@ while True:
 				decryptionEngine.generate_derived_msg_key(msg)
 			elif (label == b'mac'):
 				decryptionEngine.generate_derived_mac_key(msg)
+			elif (label == b'fil'):
+				data = decryptionEngine.decrypt_msg(msg, True)
+				f = open(NET_PATH + OWN_ADDR + "/" + FILENAME, "wb+")
+				f.write(data)
+				f.close()
 			elif (label == b'enc'):
 				if decryptionEngine.has_keys():
 					decrypt_msg = decryptionEngine.decrypt_msg(msg)
