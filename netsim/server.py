@@ -156,6 +156,9 @@ class Server:
         if(self.userdict[msg1_dict["uid"]][0]==msg1_dict["pwd"]):
             self.client_public_keypath = self.userdict[msg1_dict["uid"]][1]
             self.current_client = msg1_dict["ADDR"]
+            self.current_client_dir += self.current_client_userid + "/"
+            if not os.path.exists(self.current_client_dir):
+                os.mkdir(self.current_client_dir)
             return True, msg1_dict["N"]
         else:
              print('invalid password recieved, login failed.')
