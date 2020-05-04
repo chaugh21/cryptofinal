@@ -54,6 +54,21 @@ class Server:
             f.close()
             self.encrypt_and_send(msg_str)    #send file as bytes to client
 
+    def cwd(self, dir_arg):
+        pathlst = self.current_client_dir.split("/")
+        pathlst = pathlst[:-1]
+        print (pathlst)
+        dirlst = dir_arg.split("/")
+        print (dirlst)
+        for x in dirlst:
+            if x == "..":
+                pathlst = pathlst[:-1]
+            elif x != ".":
+                pathlst.append(x)
+        path = "/".join(pathlst)
+        path += "/"
+        return path
+
     '''used in parse_command, encrypts and sends a message to the client'''
     def encrypt_and_send(self, msg_string):
         self.encrypt_instance.send(msg_string, self.current_client, self.netif)
@@ -78,12 +93,12 @@ class Server:
             self.encrypt_and_send(self.current_client_dir)
         elif cmd == "CWD":  #change directory
             dir_arg = args[1]
-            path = self.current_client_dir + dir_arg
+            path = self.current_client_dir + dir_arg + "/"
             if not os.path.exists(path):
                 msg_str = "This folder does not exist!"
                 self.encrypt_and_send(msg_str)
             else:
-                self.current_client_dir = self.current_client_dir + dir_arg
+                self.current_client_dir = self.cwd(dir_arg)
                 self.encrypt_and_send("Current directory: " + self.current_client_dir)
         elif cmd == "LST": #list contents
             lst = os.listdir(self.current_client_dir)
@@ -101,9 +116,12 @@ class Server:
             os.remove(self.current_client_dir + args[2] + "/" + args[1])   #check formatting
             self.encrypt_and_send("Removed file " + args[1])
         else:
-            msg_str = "Command not found"
+            msg_str =  "List of commands: \nMake Directory: MKD <foldername> \n Remove Directory: RMD <foldername> \n Get Directory GWD \n List Directory LST \n Upload file: UPL <filename> <filecontents> \n Download File: DNL <filename> "
             self.encrypt_and_send(msg_str)
 
+    # def useable_commands(self):
+    #     list_of_commands = " Make Directory: MKD <foldername> \n Remove Directory: RMD <foldername> \n Get Directory GWD \n List Directory LST \n Upload file: UPL <filename> <filecontents> \n Download File: DNL <filename> "
+    #     return list_of_commands
     '''
     Uses the nonce sent over from the client to generate the derived message or
     mac keys.
