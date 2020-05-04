@@ -11,10 +11,6 @@ NET_PATH = './'
 OWN_ADDR = 'A'
 FILENAME = "" #TODO: this variable should live in user.py
 
-# test session keys
-session_msg_key = b'abcdefghijklmnopqrstuvwxyz1234567890'
-session_mac_key = b'zyxwvutsrqponmlkjihgfedcba0987654321'
-
 # ------------
 # main program
 # ------------
@@ -50,8 +46,8 @@ netif = network_interface(NET_PATH, OWN_ADDR)
 dst = input('Type a server address: ')
 user = User(netif,dst,OWN_ADDR)
 user.login()
-encryptionEngine = encrypt(OWN_ADDR, session_msg_key, session_mac_key)
-decryptionEngine = decrypt(session_msg_key,session_mac_key)
+encryptionEngine = encrypt(OWN_ADDR, user.session_message_key, user.session_mac_key)
+decryptionEngine = decrypt(user.session_message_key,user.session_mac_key)
 receive_mode = True
 
 while True:
