@@ -23,7 +23,10 @@ class Server:
         self.server_pk_path = "./server_pb.pem"
         self.client_pb_path = "./client_pb.pem"
         public_key.generate_key_pair(self.server_pb_path,self.server_pk_path)
-        self.userdict = {'John': ("Smith",'./client_pb.pem'), 'Raz': ("Mataz",'./client_pb.pem'), 'oatmeal': ('soymilk','./client_pb.pem')}
+        with open('userdata.json') as json_file:
+            data = json.load(json_file)
+        self.userdict = data
+        print(data)
         self.N = 0
         # self.userdict = {'John': (SHA256.new('Smith'),'/pbkey.?')}
         self.session_message_key=''
@@ -168,7 +171,9 @@ Remove File from Folder: RMF <filname> <foldername>
             print("Invalid User ID: login unsucessful")
             sys,exit(1)
 
-        if(self.userdict[msg1_dict["uid"]][0]==msg1_dict["pwd"]):
+        pwdhash = SHA256.new(msg1_dict["pwd"].encode('utf-8')).digest().hex()
+
+        if(self.userdict[msg1_dict["uid"]][0]==pwdhash):
             self.client_public_keypath = self.userdict[msg1_dict["uid"]][1]
             self.current_client = msg1_dict["ADDR"]
             self.current_client_userid = msg1_dict["uid"]
