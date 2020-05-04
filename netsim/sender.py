@@ -5,6 +5,7 @@ import os, sys, getopt, time
 from encrypt import encrypt
 from netinterface import network_interface
 from decrypt import decrypt
+from user import User
 
 NET_PATH = './'
 OWN_ADDR = 'A'
@@ -44,12 +45,14 @@ if OWN_ADDR not in network_interface.addr_space:
 	print('Error: Invalid address ' + OWN_ADDR)
 	sys.exit(1)
 
-# main loop
 netif = network_interface(NET_PATH, OWN_ADDR)
+dst = input('Type a server address: ')
+user = User(netif,dst,OWN_ADDR)
+user.login()
 encryptionEngine = encrypt(OWN_ADDR, session_msg_key, session_mac_key)
 decryptionEngine = decrypt(session_msg_key,session_mac_key)
-dst = input('Type a server address: ')
 receive_mode = True
+
 while True:
 	msg = input('>> ')
 
@@ -57,7 +60,7 @@ while True:
 
 	encryptionEngine.send(msg, dst, netif)
 	while receive_mode:
-		status, msg = netif.receive_msg(blocking=False)      # when returns, status is True and msg contains a message
+		status, msg = netif.receive_msg(blocking=False)   # when returns, status is True and msg contains a message
 		if status:
 			label, msg = msg[:3], msg[3:]
 			if (label == b'msg'):

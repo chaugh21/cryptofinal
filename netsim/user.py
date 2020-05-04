@@ -1,8 +1,11 @@
-import Crypto,SessionKeyGenerator,sys
+import Crypto,sys
 from netinterface import network_interface
 from Crypto.Hash import HMAC, SHA256
 from Crypto.Random import get_random_bytes
 import encrypt
+from sessionkeygen import SessionKeyGenerator
+from public_key import public_key
+import json
 
 class User:
 
@@ -10,30 +13,38 @@ class User:
     OWN_ADDR = 'B'
 
 
-    def __init__(self, netif, encrypt_instance):
+    def __init__(self, netif,server_addr,own_addr):
+        self.OWN_ADDR=own_addr
+        self.server_addr = server_addr
         self.N=0
-        self.X1 =0
+        self.X1=0
         self.X2=0
-        self.server_public_key= ''
-        self.usr_private_key=''
         self.userid = ''
-        self.session_msg_key=0
-        self.session_mac_key=0
+        self.session_message_key=''
+        self.session_message_key=''
         self.netif = netif
-        self.encrypt_instance = encrypt_instance
+        self.server_pb_path= 'server_pb.pem' # Our assumption is that an attacker cannot access these
+        self.client_pk_path='client_pk.pem'
+        self.client_pb_path= 'client_pb.pem'
+        public_key.generate_key_pair(self.client_pb_path,self.client_pk_path)
+        self.userid = ''
+
         return
 
-
-    def gen_message1(uid,pwd):
+    def gen_message1(self,uid,pwd):
         #create a random nonce N
         self.N = SessionKeyGenerator.genNonce()
         #concat
-        msg1_pt = str(uid.to_bytes(8,byteorder='big')) + str(pwd.to_bytes(8,byteorder='big'))+str(self.N.to_bytes(4,byteorder='big'))
+        msg1_dic ={ "uid":uid, "pwd":pwd, "N": self.N, "ADDR": self.OWN_ADDR}
+        msg1_json = json.dumps(msg1_dic)
+
         #enc using the public key of the server. TODO: encode with public key.
-        msg1_enc = PublicKey.encrypt(self.server_public_key,msg1_pt)
+        msg1_enc = public_key.encrypt(self.server_pb_path,msg1_json.encode('utf-8'))
         return msg1_enc
 
-    def login():
+
+    def login(self):
+
         #read in the userid and password from the command line
         print('Welcome to the Secure FTP. Please enter your username')
         self.userid=str(input())
@@ -41,45 +52,42 @@ class User:
         pwd_str=str(input())
 
         #create a message to init the protocol
-        enc_msg1 = gen_message1(self.userid,pwd_str)
+        enc_msg1 = self.gen_message1(self.userid,pwd_str)
 
-        # init the netinterface
-        #netif = network_interface(NET_PATH,OWN_ADDR)
         #send M1
-        self.netif.send_msg('A', enc_msg.encode('utf-8'))
+        self.netif.send_msg(self.server_addr, enc_msg1)
 
         #Wait for M2
+        status = None
         while (status == None):
-            status, enc_msg2 = netif.receive_msg(blocking=True)
+            status, enc_msg2 = self.netif.receive_msg(blocking=True)
 
-        #TODO: HANDLE ERRORS
-        pt_msg2= publickey.decrypt(self.client_pk_path,enc_msg2)
-        print('User: Message Received From Server:' + str(pt_msg2))
-        if not (int.from_bytes(pt_msg2[0:3],byteorder='big')==Self.N):
-            #Raise an error here that N is not correct
-
-        signature = pt_msg2[388:]
+        pt_msg2= public_key.decrypt(self.client_pk_path,enc_msg2[0:256])
         #verify the signature
-        if not (public_key.verify(self.server_pb_path,signature)):
-            #Raise and error here that the message signature did not verify
+        signature = enc_msg2[256:]
+        public_key.verify(self.server_pb_path,signature,pt_msg2)
 
-        M1 = int.from_bytes(pt_msg2[4:67],byteorder='big')
-        M2 = int.from_bytes(pt_msg2[68:131],byteorder='big')
-        G1 = int.from_bytes(pt_msg2[132:195],byteorder='big')
-        G2 = int.from_bytes(pt_msg2[196:259],byteorder='big')
-        P1 = int.from_bytes(pt_msg2[260:323],byteorder='big')
-        P2 = int.from_bytes(pt_msg2[324:387],byteorder='big')
+        msg2_json=pt_msg2.decode('utf-8')
+        msg2_dict= json.loads(msg2_json)
 
-        DH2 = SessionKeyGenerator.generate_dh2(G1,G2,P1,P2)
-        self.session_message_key,self.session_mac_key = SessionKeyGenerator.calculate_keys(M1,M2,DH2['Y1'],DH2['Y2'],P1,P2)
-        print(session_message_key,session_mac_key)
+        if not (msg2_dict["N"]==self.N):
+            print("N-related error, do not trust the server!")
+            sys.exit(1)
 
+        DH2 = SessionKeyGenerator.generate_dh2(msg2_dict["G1"],msg2_dict["G2"],msg2_dict["P1"],msg2_dict["P2"])
+        self.session_message_key,self.session_mac_key = SessionKeyGenerator.calculate_keys(msg2_dict["M1"],msg2_dict["M2"], DH2['Y1'],DH2['Y2'],msg2_dict["P1"],msg2_dict["P2"])
         #create+sign+encode+send msg3
-        msg3_pt = str(self.N.to_bytes(4,byteorder='big')) + str(DH2['M1'].to_bytes(64,byteorder='big')) +str(DH2['M2'].to_bytes(64,byteorder='big')))
-        msg3_pt_signed = publickey.sign(self.client_pk_path,msg3_pt)
-        msg3_enc = public_key.encrypt(self.server_public_key,msg3_pt_signed)
-        self.netif.send_msg('A', msg3_enc.encode('utf-8'))
 
+        msg3_dict = { "MA":DH2['MA'],"MB":DH2['MB'],"N":self.N,}
+        msg3_pt = json.dumps(msg3_dict).encode('utf-8')
+
+        msg3_pt_sig = public_key.sign(self.client_pk_path,msg3_pt)
+        msg3_enc = public_key.encrypt(self.server_pb_path,msg3_pt)
+
+        self.netif.send_msg(self.server_addr, msg3_enc + msg3_pt_sig)
+
+        print('login protocol successful deriving session keys:')
+        print(self.session_message_key,self.session_mac_key)
         return
 
 
