@@ -107,9 +107,12 @@ class Server:
             os.remove(self.current_client_dir + args[2] + "/" + args[1])   #check formatting
             self.encrypt_and_send("Removed file " + args[1])
         else:
-            msg_str = "Command not found"
+            msg_str =  "Llist of commands: Make Directory: MKD <foldername> \n Remove Directory: RMD <foldername> \n Get Directory GWD \n List Directory LST \n Upload file: UPL <filename> <filecontents> \n Download File: DNL <filename> "
             self.encrypt_and_send(msg_str)
 
+    # def useable_commands(self):
+    #     list_of_commands = " Make Directory: MKD <foldername> \n Remove Directory: RMD <foldername> \n Get Directory GWD \n List Directory LST \n Upload file: UPL <filename> <filecontents> \n Download File: DNL <filename> "
+    #     return list_of_commands
     '''
     Uses the nonce sent over from the client to generate the derived message or
     mac keys.
