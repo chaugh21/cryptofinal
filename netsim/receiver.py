@@ -65,11 +65,9 @@ while True:
 
 	if (label == b'msg'):
 		decryptionEngine.generate_derived_msg_key(msg)
-		print("encrypt_key received...")
 
 	elif (label == b'mac'):
 		decryptionEngine.generate_derived_mac_key(msg)
-		print("mac_key received...")
 
 	elif (label == b'fil'):
 		server.file = decryptionEngine.decrypt_msg(msg, True)
@@ -77,10 +75,9 @@ while True:
 	elif (label == b'enc'):
 		server.set_client(msg)
 		if decryptionEngine.has_keys():
-			print("decrypting message...")
 			decrypt_msg = decryptionEngine.decrypt_msg(msg)
-			print("running command: ", decrypt_msg)
+			print("executing command: ", decrypt_msg)
 			server.parse_command(decrypt_msg)
 
 		else:
-			print("you ain't got no keys bruh")
+			print("keys not found")

@@ -95,7 +95,7 @@ Remove File from Folder: RMF <filname> <foldername>
 				if decryptionEngine.has_keys():
 					decrypt_msg = decryptionEngine.decrypt_msg(msg)
 					print(decrypt_msg)
-					receive_mode = False
 				else:
-					print("you ain't got no keys bruh")
+					print("keys not found")
+				receive_mode = False
 	receive_mode = True

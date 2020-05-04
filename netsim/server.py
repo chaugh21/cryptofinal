@@ -26,9 +26,7 @@ class Server:
         with open('userdata.json') as json_file:
             data = json.load(json_file)
         self.userdict = data
-        print(data)
         self.N = 0
-        # self.userdict = {'John': (SHA256.new('Smith'),'/pbkey.?')}
         self.session_message_key=''
         self.session_mac_key=''
 
