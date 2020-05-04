@@ -13,15 +13,15 @@ class decrypt:
         self.encrypt_key = b''
         self.mac_key = b''
 
-    def decrypt_msg(self, msg):
-        header = msg[0:9]                              # header is 9 bytes long
-        iv = msg[9:9+AES.block_size]                   # iv is AES.block_size bytes long
+    def decrypt_msg(self, msg, isFile = False):
+        header = msg[0:27]                              # header is 9 bytes long
+        iv = msg[27:27+AES.block_size]                   # iv is AES.block_size bytes long
         mac = msg[-32:]                                # last 32 bytes is the mac
-        encrypted_payload = msg[9+AES.block_size:-32]  # encrypted payload is between iv and mac
+        encrypted_payload = msg[27+AES.block_size:-32]  # encrypted payload is between iv and mac
         header_version = header[0:2]                   # version is encoded on 2 bytes
         header_type = header[2:3]                      # type is encoded on 1 byte
-        header_length = header[3:5]                    # msg length is encoded on 2 bytes
-        header_sqn = header[5:9]
+        header_length = header[3:23]                    # msg length is encoded on 2 bytes
+        header_sqn = header[23:27]
 
 
         if len(msg) != int.from_bytes(header_length,byteorder='big'):
@@ -29,7 +29,7 @@ class decrypt:
 
         snd_number = int.from_bytes(header_sqn, byteorder='big')
         if snd_number - self.rcvsqn != 1:
-            return print("Error: Message sequence number is too old!")
+            return "Error: Message sequence number is too old!"
         else:
             self.rcvsqn = self.rcvsqn + 1
 
@@ -51,7 +51,10 @@ class decrypt:
         self.encrypt_key = b''
         self.mac_key = b''
 
-        return payload.decode('utf-8')
+        if isFile:
+            return payload
+        else:
+            return payload.decode('utf-8')
 
     '''
     Uses the nonce sent over from the client to generate the derived message or

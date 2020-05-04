@@ -5,6 +5,7 @@ import encrypt
 
 class Server:
     def __init__(self, netif, encrypt_instance, server_dir):
+        self.file = b''
         self.current_client = ''
         self.current_client_userid = 'Sagar'     #TODO: shouldn't be hard coded
         self.server_dir = server_dir
@@ -81,9 +82,8 @@ class Server:
             self.encrypt_and_send(msg_str)
         elif cmd == "UPL":  #form of upl FILENAME FILECONTENT
             filename = args[1]
-            dafile = " ".join(args[2:])
-            f = open(self.current_client_dir + filename, "w+")
-            f.write(dafile)
+            f = open(self.current_client_dir + filename, "wb+")
+            f.write(self.file)
             f.close()
             self.encrypt_and_send("Uploaded file " + filename)
         elif cmd == "DNL":  #download file

@@ -55,7 +55,12 @@ while True:
 
 	if msg == 'exit' or msg == 'quit': break
 
+	if msg[:3] == 'UPL':
+		_, filename = msg.split()
+		encryptionEngine.send_file(NET_PATH + OWN_ADDR + "/" + filename, dst, netif)
+
 	encryptionEngine.send(msg, dst, netif)
+
 	while receive_mode:
 		status, msg = netif.receive_msg(blocking=False)      # when returns, status is True and msg contains a message
 		if status:
