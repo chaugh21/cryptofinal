@@ -20,11 +20,11 @@ class encrypt:
         payload_length = len(msg)
         padding_length = AES.block_size - payload_length%AES.block_size
         mac_length = 32  # SHA256 hash value is 32 bytes long
-        msg_length = 9 + AES.block_size + payload_length + padding_length + mac_length
+        msg_length = 27 + AES.block_size + payload_length + padding_length + mac_length
         # create header
         header_version = b'\x01\x01'                          # protocol version 1.1
         header_type = self.client_addr.encode('utf-8')        # message type 1
-        header_length = msg_length.to_bytes(2, byteorder='big') # message length (encoded on 2 bytes)
+        header_length = msg_length.to_bytes(20, byteorder='big') # message length (encoded on 2 bytes)
         header_sqn = self.sqn_number.to_bytes(4, byteorder='big')  # next message sequence number (encoded on 4 bytes)
         header = header_version + header_type + header_length + header_sqn
 
@@ -71,3 +71,10 @@ class encrypt:
         msg_key, mac_key = self.client_key_generation(self.session_msg_key, self.session_mac_key, destination, network)
         secure_payload = self.secure_payload(msg_key, mac_key, msg)
         network.send_msg(destination, b'enc'+secure_payload)
+
+    def send_file(self, filename, destination, network):
+        with open(filename, 'rb+') as file:
+            data = file.read()
+            msg_key, mac_key = self.client_key_generation(self.session_msg_key, self.session_mac_key, destination, network)
+            secure_data = self.secure_payload(msg_key, mac_key, data)
+            network.send_msg(destination, b'fil'+secure_data)

@@ -72,6 +72,9 @@ while True:
 		decryptionEngine.generate_derived_mac_key(msg)
 		print("mac_key received...")
 
+	elif (label == b'fil'):
+		server.file = decryptionEngine.decrypt_msg(msg, True)
+
 	elif (label == b'enc'):
 		server.set_client(msg)
 		if decryptionEngine.has_keys():
