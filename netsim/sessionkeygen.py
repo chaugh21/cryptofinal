@@ -33,7 +33,9 @@ class SessionKeyGenerator:
         return {'MA':MA,'MB':MB,'Y1':Y1,'Y2':Y2}
 
     def calculate_keys(M1,M2,X1,X2,P1,P2):
-
         KMESSAGE = (M1**X1)%P1
         KMAC = (M2**X2)%P2
-        return [KMESSAGE,KMAC]
+        return [KMESSAGE.to_bytes(length=4, byteorder='big'),KMAC.to_bytes(length=4, byteorder='big')]
+
+    def genNonce():
+        return random.getrandbits(32)

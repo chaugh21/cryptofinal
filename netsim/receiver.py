@@ -11,8 +11,6 @@ NET_PATH = './'
 OWN_ADDR = 'B'
 
 # test session keys
-session_msg_key = b'abcdefghijklmnopqrstuvwxyz1234567890'
-session_mac_key = b'zyxwvutsrqponmlkjihgfedcba0987654321'
 
 # ------------
 # main program
@@ -47,10 +45,13 @@ if OWN_ADDR not in network_interface.addr_space:
 
 # main loop
 netif = network_interface(NET_PATH, OWN_ADDR)
-decryptionEngine = decrypt(session_msg_key, session_mac_key)
-encryptionEngine = encrypt(OWN_ADDR, session_msg_key, session_mac_key)
-server = Server(netif, encryptionEngine, NET_PATH + OWN_ADDR)
+server = Server(netif, None,NET_PATH + OWN_ADDR)
+server.handle_login()
+decryptionEngine = decrypt(server.session_message_key, server.session_mac_key)
+encryptionEngine = encrypt(OWN_ADDR, server.session_message_key, server.session_mac_key)
+server.encrypt_instance=encryptionEngine
 print('Server started at ' + OWN_ADDR + '...')
+
 
 while True:
 # Calling receive_msg() in non-blocking mode ...
