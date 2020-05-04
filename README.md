@@ -1,5 +1,5 @@
 # CryptoFinal 2020 AIT FT System
-Created by Omari Matthews, Sagar Panjabi, Stella Trout, and Connor Haugh.
+Created by Omari Matthews, Sagar Punjabi, Stella Trout, and Connor Haugh.
 
 Welcome to the Secure File Transfer System!
 
